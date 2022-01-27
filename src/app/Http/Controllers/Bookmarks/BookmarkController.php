@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Bookmarks;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateBookmarkRequest; // 追加
+use App\Bookmark\UseCase\CreateBookmarkUseCase;
 use App\Models\Bookmark;
 use App\Models\BookmarkCategory;
 use App\Models\User;
@@ -143,32 +144,8 @@ class BookmarkController extends Controller
      */
     public function create(CreateBookmarkRequest $request)
     {
-        if (Auth::guest()) {
-            // @note ここの処理はユーザープロフィールでも使われている
-            return redirect('/login');
-        }
-
-        // 下記のサービスでも同様のことが実現できる
-        // @see https://www.linkpreview.net/
-        $previewClient = new Client($request->url);
-        try {
-            $preview = $previewClient->getPreview('general')->toArray();
-
-            $model = new Bookmark();
-            $model->url = $request->url;
-            $model->category_id = $request->category;
-            $model->user_id = Auth::id();
-            $model->comment = $request->comment;
-            $model->page_title = $preview['title'];
-            $model->page_description = $preview['description'];
-            $model->page_thumbnail_url = $preview['cover'];
-            $model->save();
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            throw ValidationException::withMessages([
-                'url' => 'URLが存在しない等の理由で読み込めませんでした。変更して再度投稿してください'
-            ]);
-        }
+        $useCase = new CreateBookmarkUserCase();
+        $userCase->handle($request->url, $request->category, $request->comment);
 
         // 暫定的に成功時は一覧ページへ
         return redirect('/bookmarks', 302);
