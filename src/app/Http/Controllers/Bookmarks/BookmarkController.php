@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Bookmarks;
 
 
 use App\Http\Controllers\Controller;
+use App\Lib\LinkPreview\LinkPreview;
 use App\Http\Requests\CreateBookmarkRequest; // 追加
 use App\Bookmark\UseCase\CreateBookmarkUseCase;
 use App\Models\Bookmark;
@@ -144,8 +145,8 @@ class BookmarkController extends Controller
      */
     public function create(CreateBookmarkRequest $request)
     {
-        $useCase = new CreateBookmarkUserCase();
-        $userCase->handle($request->url, $request->category, $request->comment);
+        $useCase = new CreateBookmarkUseCase(new LinkPreview());
+        $useCase->handle($request->url, $request->category, $request->comment);
 
         // 暫定的に成功時は一覧ページへ
         return redirect('/bookmarks', 302);
