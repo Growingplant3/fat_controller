@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use App\Lib\LinkPreview\MockLinkPreview;
 
 class BookmarkController extends Controller
 {
@@ -145,7 +146,8 @@ class BookmarkController extends Controller
      */
     public function create(CreateBookmarkRequest $request)
     {
-        $useCase = new CreateBookmarkUseCase(new LinkPreview());
+        // $useCase = new CreateBookmarkUseCase(new LinkPreview());
+        $useCase = new CreateBookmarkUseCase(new MockLinkPreview()); // 同じインターフェイスを実装しているので引数を変えても問題なく動く
         $useCase->handle($request->url, $request->category, $request->comment);
 
         // 暫定的に成功時は一覧ページへ
