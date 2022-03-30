@@ -24,6 +24,7 @@ Route::prefix('/bookmarks')->group(function () {
     // Route::post('/', 'Bookmarks\BookmarkController@create');
     Route::post('/', 'Bookmarks\BookmarkController@create')->middleware('auth'); // ->middleware('auth')を追加
     Route::put('/{id}', 'Bookmarks\BookmarkController@update');
+    Route::put('/{id}', 'Bookmarks\BookmarkController@update')->middleware('auth');
     Route::delete('/{id}', 'Bookmarks\BookmarkController@delete');
 });
 
