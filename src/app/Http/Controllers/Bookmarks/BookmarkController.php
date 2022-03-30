@@ -264,4 +264,5 @@ class BookmarkController extends Controller
         // 暫定的に成功時はプロフィールページへ
         return redirect('/user/profile', 302);
     }
+
 }
