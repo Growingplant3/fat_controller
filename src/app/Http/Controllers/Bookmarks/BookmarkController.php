@@ -9,6 +9,7 @@ use App\Lib\LinkPreview\LinkPreview;
 use App\Http\Requests\CreateBookmarkRequest; // 追加
 use App\Http\Requests\UpdateBookmarkRequest;
 use App\Bookmark\UseCase\CreateBookmarkUseCase;
+use App\Bookmark\UseCase\UpdateBookmarkUseCase;
 use App\Models\Bookmark;
 use App\Models\BookmarkCategory;
 use App\Models\User;
@@ -46,7 +47,7 @@ class BookmarkController extends Controller
      *
      * @return Application|Factory|View
      */
-    public function list(Request $request)
+    public function list(Request $request, ShowBookMarkListPageUseCase $useCase)
     {
         /**
          * SEOに必要なtitleタグなどをファサードから設定できるライブラリ
@@ -63,12 +64,16 @@ class BookmarkController extends Controller
 
         $top_users = User::query()->withCount('bookmarks')->orderBy('bookmarks_count', 'desc')->take(10)->get();
 
+        // return view('page.bookmark_list.index', [
+        //     'h1' => 'ブックマーク一覧',
+        //     'bookmarks' => $bookmarks,
+        //     'top_categories' => $top_categories,
+        //     'top_users' => $top_users
+        // ]);
+
         return view('page.bookmark_list.index', [
             'h1' => 'ブックマーク一覧',
-            'bookmarks' => $bookmarks,
-            'top_categories' => $top_categories,
-            'top_users' => $top_users
-        ]);
+        ] + $useCase->handle());
     }
 
     /**
@@ -200,27 +205,39 @@ class BookmarkController extends Controller
      * @return Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      * @throws ValidationException
      */
-    public function update(UpdateBookmarkRequest $request, int $id)
+    public function update(UpdateBookmarkRequest $request, int $id, UpdateBookmarkUseCase $useCase)
     {
-        $model = Bookmark::query()->findOrFail($id);
-
-        if ($model->can_not_delete_or_edit) {
-            throw ValidationException::withMessages([
-                'can_edit' => 'ブックマーク後24時間経過したものは編集できません'
-            ]);
-        }
-
-        if ($model->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        $model->category_id = $request->category;
-        $model->comment = $request->comment;
-        $model->save();
+        $useCase->handle(
+            $id,
+            $request->comment,
+            $request->category
+        );
 
         // 成功時は一覧ページへ
         return redirect('/bookmarks', 302);
     }
+
+    // public function update(UpdateBookmarkRequest $request, int $id)
+    // {
+    //     $model = Bookmark::query()->findOrFail($id);
+
+    //     if ($model->can_not_delete_or_edit) {
+    //         throw ValidationException::withMessages([
+    //             'can_edit' => 'ブックマーク後24時間経過したものは編集できません'
+    //         ]);
+    //     }
+
+    //     if ($model->user_id !== Auth::id()) {
+    //         abort(403);
+    //     }
+
+    //     $model->category_id = $request->category;
+    //     $model->comment = $request->comment;
+    //     $model->save();
+
+    //     // 成功時は一覧ページへ
+    //     return redirect('/bookmarks', 302);
+    // }
 
     /**
      * ブックマーク削除
